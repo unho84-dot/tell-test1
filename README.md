@@ -16,21 +16,42 @@ project_root/
 
 ## 사전 준비
 1. Python 3.11+ 설치 (Windows 기준).
-2. 레포지토리 클론 후 프로젝트 루트에서 `.env` 파일 생성:
+2. [BotFather](https://t.me/BotFather)로 발급받은 BOT_TOKEN을 준비합니다.
+3. 레포지토리 클론 후 프로젝트 루트에서 `.env` 파일을 생성하고 토큰을 적습니다:
    ```
-   BOT_TOKEN=your_bot_token_here
+   BOT_TOKEN=123456:ABC-Your-Telegram-Bot-Token
    ```
-3. 가상환경 생성 및 의존성 설치:
-   ```bash
+4. (선택) 테스트용 수신자 목록 예시를 만듭니다:
+   ```csv
+   # recipients.csv 예시
+   chat_id,name
+   123456789,홍길동
+   987654321,테스트
+   ```
+5. 가상환경 생성 및 의존성 설치:
+   ```powershell
    python -m venv .venv
-   .venv\\Scripts\\activate
+   .venv\Scripts\activate
    pip install -r requirements.txt
    ```
 
-## 실행 방법
-```
-python app.py
-```
+## 실행 방법 (Windows, PowerShell 기준)
+1. 프로젝트 루트에서 가상환경을 활성화합니다:
+   ```powershell
+   .venv\Scripts\activate
+   ```
+2. GUI를 실행합니다:
+   ```powershell
+   python app.py
+   ```
+3. 실행 후 순서
+   - `Load recipients.csv` 버튼으로 CSV를 불러오거나, "Or paste chat_ids" 박스에 줄바꿈으로 chat_id를 붙여넣습니다.
+   - 메시지를 입력합니다.
+   - **즉시 발송**: `즉시 발송` 버튼 클릭.
+   - **예약 발송**: `YYYY-MM-DD HH:MM` 형식(Asia/Seoul)을 입력하고 `예약 발송` 클릭.
+   - **테스트 발송**: 상단 입력란에 개인 chat_id를 적고 `테스트 발송` 클릭.
+
+> Tip: 예약 입력 예시 — `2024-12-31 22:30` (Asia/Seoul). 발송 로그는 실행 폴더의 `send_log.csv`에 누적됩니다.
 
 ## 주요 기능
 - recipients.csv 불러오기(`chat_id` 컬럼 필수, `name` 컬럼은 선택)
