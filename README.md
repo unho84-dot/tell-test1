@@ -34,6 +34,7 @@ project_root/
    .venv\Scripts\activate
    pip install -r requirements.txt
    ```
+   - Windows에서 시간대 처리를 위해 `tzdata`가 함께 설치됩니다.
 
 ## 실행 방법 (Windows, PowerShell 기준)
 1. 프로젝트 루트에서 가상환경을 활성화합니다:
@@ -71,6 +72,6 @@ pyinstaller --onefile --name telegram_sender app.py
 (첫 실행 시 `pyinstaller`가 없으면 `pip install pyinstaller`로 설치)
 
 ## 사용 팁
-- 예약 발송 입력 예시: `2024-12-31 22:30`
+- 예약 발송 입력 예시: `2024-12-31 22:30` (입력창의 placeholder를 지우고 입력)
 - 발송 전에 반드시 테스트 발송으로 토큰/채팅 ID를 확인하세요.
 - `send_log.csv`는 실행 시 자동 생성되며, 동일 이름의 파일이 있으면 뒤에 이어 기록합니다.

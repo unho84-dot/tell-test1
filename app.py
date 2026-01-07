@@ -1,3 +1,4 @@
+import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
 from typing import List
@@ -19,6 +20,7 @@ class TelegramSenderApp:
         self.root = root
         self.root.title("Telegram Sender")
         self.recipients: List[str] = []
+        self.schedule_placeholder = "YYYY-MM-DD HH:MM (Asia/Seoul)"
 
         self._build_recipient_section()
         self._build_message_section()
@@ -47,7 +49,9 @@ class TelegramSenderApp:
         frame.pack(fill="x", padx=10, pady=5)
 
         self.schedule_entry = tk.Entry(frame)
-        self.schedule_entry.insert(0, "YYYY-MM-DD HH:MM (Asia/Seoul)")
+        self.schedule_entry.insert(0, self.schedule_placeholder)
+        self.schedule_entry.bind("<FocusIn>", self._clear_schedule_placeholder)
+        self.schedule_entry.bind("<FocusOut>", self._restore_schedule_placeholder)
         self.schedule_entry.pack(fill="x")
 
     def _build_buttons(self) -> None:
@@ -94,15 +98,18 @@ class TelegramSenderApp:
         return True
 
     def _send(self, recipients: List[str], message: str) -> None:
-        try:
-            token = load_bot_token()
-            results = send_messages(token, recipients, message, log_path=LOG_PATH)
-        except Exception as exc:  # pragma: no cover - user feedback path
-            messagebox.showerror("Send Error", str(exc))
-            return
-        success = sum(1 for _, status, _ in results if status == "success")
-        failure = len(results) - success
-        messagebox.showinfo("Done", f"Sent: {success}\nFailed: {failure}")
+        def worker() -> None:
+            try:
+                token = load_bot_token()
+                results = send_messages(token, recipients, message, log_path=LOG_PATH)
+            except Exception as exc:  # pragma: no cover - user feedback path
+                self.root.after(0, lambda: messagebox.showerror("Send Error", str(exc)))
+                return
+            success = sum(1 for _, status, _ in results if status == "success")
+            failure = len(results) - success
+            self.root.after(0, lambda: messagebox.showinfo("Done", f"Sent: {success}\nFailed: {failure}"))
+
+        threading.Thread(target=worker, daemon=True).start()
 
     def handle_immediate_send(self) -> None:
         recipients = self._collect_recipients()
@@ -120,18 +127,25 @@ class TelegramSenderApp:
         if not message.strip():
             messagebox.showwarning("Message", "Please enter a message to send.")
             return
-        try:
-            token = load_bot_token()
-            chat_id, status, error = send_test_message(token, chat_id, message, log_path=LOG_PATH)
+        def worker() -> None:
+            try:
+                token = load_bot_token()
+                _, status, error = send_test_message(token, chat_id, message, log_path=LOG_PATH)
+            except Exception as exc:  # pragma: no cover - user feedback path
+                self.root.after(0, lambda: messagebox.showerror("Test", str(exc)))
+                return
             if status == "success":
-                messagebox.showinfo("Test", "Test message sent successfully.")
+                self.root.after(0, lambda: messagebox.showinfo("Test", "Test message sent successfully."))
             else:
-                messagebox.showerror("Test", f"Failed: {error}")
-        except Exception as exc:  # pragma: no cover - user feedback path
-            messagebox.showerror("Test", str(exc))
+                self.root.after(0, lambda: messagebox.showerror("Test", f"Failed: {error}"))
+
+        threading.Thread(target=worker, daemon=True).start()
 
     def handle_schedule_send(self) -> None:
         time_text = self.schedule_entry.get().strip()
+        if not time_text or time_text == self.schedule_placeholder:
+            messagebox.showwarning("Schedule", "Please enter schedule time in YYYY-MM-DD HH:MM format.")
+            return
         try:
             target_time = parse_schedule_time(time_text)
         except Exception as exc:
@@ -147,6 +161,14 @@ class TelegramSenderApp:
 
         schedule_send(target_time, job)
         messagebox.showinfo("Schedule", f"Message scheduled for {target_time} (Asia/Seoul)")
+
+    def _clear_schedule_placeholder(self, _event: tk.Event) -> None:
+        if self.schedule_entry.get() == self.schedule_placeholder:
+            self.schedule_entry.delete(0, tk.END)
+
+    def _restore_schedule_placeholder(self, _event: tk.Event) -> None:
+        if not self.schedule_entry.get().strip():
+            self.schedule_entry.insert(0, self.schedule_placeholder)
 
 
 def main() -> None:
