@@ -3,18 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Tuple
 
-from dotenv import load_dotenv
-import os
-
 TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
-
-
-def load_bot_token() -> str:
-    load_dotenv()
-    token = os.getenv("BOT_TOKEN")
-    if not token:
-        raise RuntimeError("BOT_TOKEN is not set in the environment or .env file")
-    return token
 
 
 def load_recipients_from_csv(path: str) -> List[str]:
