@@ -1,2 +1,1 @@
-python-telegram-bot==21.6
-python-dotenv
+telethon==1.37.0
